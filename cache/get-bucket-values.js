@@ -20,17 +20,17 @@ module.exports = class GetBucketValues
 
     whenGetCollections()
     {
-        return this.redisProxyClient.whenMembers(this.keys.Collection)     
+        return this.redisProxyClient.whenPrefixMembers(this.keys.Collection)
     }
 
     whenGetRegions() 
     {
-        return this.redisProxyClient.whenMembers(this.keys.Region)                  
+        return this.redisProxyClient.whenPrefixMembers(this.keys.Region)           
     }
 
     whenGetCuisines()
     {
-        return this.redisProxyClient.whenMembers(this.keys.Cuisine)
+        return this.redisProxyClient.whenPrefixMembers(this.keys.Cuisine)
     }
 
     whenQuit()
