@@ -44,13 +44,12 @@ const toChatGallery = (bucket, bucketValues) => {
                 'type':'template',
                 'payload':{
                   'template_type':'generic',
-                  'image_aspect_ratio': 'square',
                   'elements':[]
                 }
               }
             }
     if (bucket === 'cuisines') bucket = 'cuisine'
-    for (const bucketValue of bucketValues) {
+    for (const bucketValue of _.sampleSize(bucketValues, 10)) {
         message.attachment.payload.elements.push({
             'title':bucketValue,
             'image_url':'https://res.cloudinary.com/recipe-shelf/image/upload/v1484217570/stock-images/' + bucketValue + '.jpg',

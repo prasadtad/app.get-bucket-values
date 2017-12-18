@@ -73,28 +73,13 @@ tests.push(whenLoadTestData()
                 })         
                 .then(() => index.whenHandler(getCollectionsGalleryChatEvent))
                 .then(results => {
-                    results.messages[0].attachment.payload.elements.sort((a, b) => a.title.localeCompare(b.title))
                     testMessages.push('Get collections gallery')
-                    assert.deepEqual(results, {
-                        'messages': [
-                            {
-                              'attachment':{
-                                'type':'template',
-                                'payload':{
-                                  'template_type':'generic',
-                                  'image_aspect_ratio': 'square',
-                                  'elements':_.map(['Curries','Dinner','Lunch','Main course','One-pot meals','Rice dishes','Side dishes'],
-                                        e => {
-                                            return {
-                                                'title':e,
-                                                'image_url':'https://res.cloudinary.com/recipe-shelf/image/upload/v1484217570/stock-images/' + e + '.jpg',
-                                                'item_url':'https://www.recipeshelf.com.au/collections/' + e.toLowerCase() + '/'
-                                            }
-                                        })
-                                }
-                              }
-                            }
-                        ]
+                    assert.equal(results.messages[0].attachment.payload.elements.length, 7)                    
+                    const title = results.messages[0].attachment.payload.elements[0].title
+                    assert.deepEqual(results.messages[0].attachment.payload.elements[0], {
+                        'title':title,
+                        'image_url':'https://res.cloudinary.com/recipe-shelf/image/upload/v1484217570/stock-images/' + title + '.jpg',
+                        'item_url':'https://www.recipeshelf.com.au/collections/' + title.toLowerCase() + '/'
                     })
                     return Promise.resolve()
                 })
@@ -116,26 +101,11 @@ tests.push(whenLoadTestData()
                 .then(results => {
                     results.messages[0].attachment.payload.elements.sort((a, b) => a.title.localeCompare(b.title))
                     testMessages.push('Get cuisines gallery')
-                    assert.deepEqual(results, {
-                        'messages': [
-                            {
-                              'attachment':{
-                                'type':'template',
-                                'payload':{
-                                  'template_type':'generic',
-                                  'image_aspect_ratio': 'square',
-                                  'elements':_.map(['South Indian'],
-                                        e => {
-                                            return {
-                                                'title':e,
-                                                'image_url':'https://res.cloudinary.com/recipe-shelf/image/upload/v1484217570/stock-images/' + e + '.jpg',
-                                                'item_url':'https://www.recipeshelf.com.au/cuisine/' + e.toLowerCase() + '/'
-                                            }
-                                        })
-                                }
-                              }
-                            }
-                        ]
+                    assert.equal(results.messages[0].attachment.payload.elements.length, 1)                    
+                    assert.deepEqual(results.messages[0].attachment.payload.elements[0], {
+                        'title':'South Indian',
+                        'image_url':'https://res.cloudinary.com/recipe-shelf/image/upload/v1484217570/stock-images/South Indian.jpg',
+                        'item_url':'https://www.recipeshelf.com.au/cuisine/south indian/'
                     })
                     return Promise.resolve()
                 })
