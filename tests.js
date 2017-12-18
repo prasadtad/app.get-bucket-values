@@ -23,6 +23,16 @@ const getCuisinesEvent = {
     'bucket': 'cuisines'
 }
 
+const getCollectionsGalleryChatEvent = {
+    'bucket': 'collections',
+    'forChat': true
+}
+
+const getCuisinesGalleryChatEvent = {
+    'bucket': 'cuisines',
+    'forChat': true
+}
+
 const whenLoadTestData = () => {
     const testData = JSON.parse(fs.readFileSync(path.join(__dirname, 'testdata.json')))
     const client = redis.createClient(process.env.CACHE_ENDPOINT)
@@ -61,6 +71,33 @@ tests.push(whenLoadTestData()
                     assert.deepEqual(results, ['Curries','Dinner','Lunch','Main course','One-pot meals','Rice dishes','Side dishes'])
                     return Promise.resolve()
                 })         
+                .then(() => index.whenHandler(getCollectionsGalleryChatEvent))
+                .then(results => {
+                    results.messages[0].attachment.payload.elements.sort((a, b) => a.title.localeCompare(b.title))
+                    testMessages.push('Get collections gallery')
+                    assert.deepEqual(results, {
+                        'messages': [
+                            {
+                              'attachment':{
+                                'type':'template',
+                                'payload':{
+                                  'template_type':'generic',
+                                  'image_aspect_ratio': 'square',
+                                  'elements':_.map(['Curries','Dinner','Lunch','Main course','One-pot meals','Rice dishes','Side dishes'],
+                                        e => {
+                                            return {
+                                                'title':e,
+                                                'image_url':'https://res.cloudinary.com/recipe-shelf/image/upload/v1484217570/stock-images/' + e + '.jpg',
+                                                'item_url':'https://www.recipeshelf.com.au/collections/' + e.toLowerCase() + '/'
+                                            }
+                                        })
+                                }
+                              }
+                            }
+                        ]
+                    })
+                    return Promise.resolve()
+                })
                 .then(() => index.whenHandler(getRegionsEvent))
                 .then(results => {
                     results.sort()
@@ -73,6 +110,33 @@ tests.push(whenLoadTestData()
                     results.sort()
                     testMessages.push('Get cuisines')
                     assert.deepEqual(results, ['South Indian'])
+                    return Promise.resolve()
+                })
+                .then(() => index.whenHandler(getCuisinesGalleryChatEvent))
+                .then(results => {
+                    results.messages[0].attachment.payload.elements.sort((a, b) => a.title.localeCompare(b.title))
+                    testMessages.push('Get cuisines gallery')
+                    assert.deepEqual(results, {
+                        'messages': [
+                            {
+                              'attachment':{
+                                'type':'template',
+                                'payload':{
+                                  'template_type':'generic',
+                                  'image_aspect_ratio': 'square',
+                                  'elements':_.map(['South Indian'],
+                                        e => {
+                                            return {
+                                                'title':e,
+                                                'image_url':'https://res.cloudinary.com/recipe-shelf/image/upload/v1484217570/stock-images/' + e + '.jpg',
+                                                'item_url':'https://www.recipeshelf.com.au/cuisine/' + e.toLowerCase() + '/'
+                                            }
+                                        })
+                                }
+                              }
+                            }
+                        ]
+                    })
                     return Promise.resolve()
                 })
             )            

@@ -23,7 +23,7 @@ exports.whenHandler = (event) => {
         else
             return Promise.reject(new Error('Invalid event - ' + JSON.stringify(event)))
         return p.then(results => getBucketValues.whenQuit()
-                                                .then(() => Promise.resolve(results)))
+                                                .then(() => Promise.resolve(event.forChat ? toChatGallery(event.bucket, results) : results)))
                 .catch(err => whenQuit(getBucketValues, err))
     }
     catch (err)
@@ -36,4 +36,26 @@ exports.handler = (event, context, callback) => {
     exports.whenHandler(event)
             .then(result => callback(null, result))
             .catch(err => callback(err))    
+}
+
+const toChatGallery = (bucket, bucketValues) => {
+    const message = {
+              'attachment':{
+                'type':'template',
+                'payload':{
+                  'template_type':'generic',
+                  'image_aspect_ratio': 'square',
+                  'elements':[]
+                }
+              }
+            }
+    if (bucket === 'cuisines') bucket = 'cuisine'
+    for (const bucketValue of bucketValues) {
+        message.attachment.payload.elements.push({
+            'title':bucketValue,
+            'image_url':'https://res.cloudinary.com/recipe-shelf/image/upload/v1484217570/stock-images/' + bucketValue + '.jpg',
+            'item_url':'https://www.recipeshelf.com.au/' + bucket + '/' + bucketValue.toLowerCase() + '/'
+        })
+    }
+    return { 'messages' : [ message ] }
 }
