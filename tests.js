@@ -16,11 +16,11 @@ const getCollectionsEvent = {
 }
 
 const getRegionsEvent = {
-    'bucket': 'regions'
+    'bucket': 'region'
 }
 
 const getCuisinesEvent = {
-    'bucket': 'cuisines'
+    'bucket': 'cuisine'
 }
 
 const getCollectionsGalleryChatEvent = {
@@ -29,7 +29,7 @@ const getCollectionsGalleryChatEvent = {
 }
 
 const getCuisinesGalleryChatEvent = {
-    'bucket': 'cuisines',
+    'bucket': 'cuisine',
     'forChat': true
 }
 
@@ -41,8 +41,17 @@ const whenLoadTestData = () => {
                     const trans = client.multi()
                     for (const key of _.keys(testData))
                     {
-                        if (Array.isArray(testData[key]))
-                            trans.sadd(key,testData[key])
+                        if (Array.isArray(testData[key])) {
+                            for (const value of testData[key])
+                            {
+                                if (_.isObject(value)) {
+                                    for (const id of _.keys(value))
+                                        trans.zadd(key, value[id], id)
+                                }
+                                else
+                                    trans.sadd(key, testData[key])
+                            }
+                        }
                         else
                         {
                             for (const hashField of _.keys(testData[key]))
@@ -57,11 +66,11 @@ const whenLoadTestData = () => {
 let testMessages = [], tests = []
   
 tests.push(index.whenHandler()
-            .catch(err => {
-                testMessages.push('Errors are bubbled up')
-                assert.equal(err.message, 'Invalid event - undefined')
-                return Promise.resolve()
-            }))
+        .catch(err => {
+            testMessages.push('Errors are bubbled up')
+            assert.equal(err.message, 'Invalid event - undefined')
+            return Promise.resolve()
+        }))
 
 tests.push(whenLoadTestData()
                 .then(() => index.whenHandler(getCollectionsEvent))
@@ -115,6 +124,10 @@ Promise.all(tests)
         .then(() => {
             console.info(_.map(testMessages, m => m + ' - passed').join('\n'))
             process.exit()
+        })
+        .catch(err => {
+            console.error(err)
+            process.exit()            
         })
 
 

@@ -2,33 +2,25 @@
 
 const _ = require('lodash')
 
-const GetBucketValues = require('./cache/get-bucket-values')
+const RedisPoco = require('redis-poco')
 
-const whenQuit = (getBucketValues, err) => getBucketValues.whenQuit().then(() => Promise.reject(err))
+const whenQuit = (redisPoco, err) => redisPoco.whenQuit().then(() => Promise.reject(err))
 
 exports.whenHandler = (event) => {
     if (!event) return Promise.reject(new Error('Invalid event - ' + JSON.stringify(event)))        
     if (!_.isObject(event)) return Promise.reject(new Error('Invalid event - ' + JSON.stringify(event)))        
     console.info(JSON.stringify(event))
-    const getBucketValues = new GetBucketValues()
+    const redisPoco = new RedisPoco({ namespace: 'recipe', itemKey: 'item', endpoint: process.env.CACHE_ENDPOINT, attributes: [ 'vegan', 'totalTimeInMinutes', 'approved', 'spiceLevel', 'region', 'cuisine', 'chefId', 'ingredientIds', 'overnightPreparation', 'accompanimentIds', 'collections' ]})
     try
     {
-        let p;
-        if (event.bucket === 'collections')
-            p = getBucketValues.whenGetCollections()
-        else if (event.bucket === 'regions')
-            p = getBucketValues.whenGetRegions()
-        else if (event.bucket === 'cuisines')
-            p = getBucketValues.whenGetCuisines()
-        else
-            return Promise.reject(new Error('Invalid event - ' + JSON.stringify(event)))
-        return p.then(results => getBucketValues.whenQuit()
-                                                .then(() => Promise.resolve(event.forChat ? toChatGallery(event.bucket, results) : results)))
-                .catch(err => whenQuit(getBucketValues, err))
+        let p = redisPoco.whenGetAttributeValues(event.bucket);
+        return p.then(results => redisPoco.whenQuit()
+                    .then(() => Promise.resolve(event.forChat ? toChatGallery(event.bucket, results) : results)))
+                .catch(err => whenQuit(redisPoco, err))
     }
     catch (err)
     {
-        return whenQuit(getBucketValues, err)
+        return whenQuit(redisPoco, err)
     }
 }
 
@@ -48,7 +40,6 @@ const toChatGallery = (bucket, bucketValues) => {
                 }
               }
             }
-    if (bucket === 'cuisines') bucket = 'cuisine'
     for (const bucketValue of _.sampleSize(bucketValues, 10)) {
         message.attachment.payload.elements.push({
             'title':bucketValue,
